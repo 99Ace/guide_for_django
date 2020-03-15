@@ -203,3 +203,64 @@ Purely to fix an issue with Cloud9
 
 2. Run the server and add in "/admin" to assess the admin portal    
          
+---
+
+## USER AUTHENTICATION SETUP INSTRUCTIONS
+
+###  ADD A LOGOUT ROUTE
+##### _Views.py_
+Insides accounts/views.py, we are going to import **django.contrib.auth** which holds a lot of login and logout functions.
+
+        from django.shortcuts import render, redirect, reverse, HttpResponse
+        from django.contrib import auth, messages
+
+        # Create your views here.
+        def index(request):
+            return render(request, 'index.html')
+            
+        def logout(request):
+            auth.logout(request)
+            messages.success(request, "You have successfully been logged out")
+            return redirect(reverse('index'))
+
+##### _/templates/index.html_
+Now we update the index.html template to show the messages, and to show the logout link.
+        
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <meta http-equiv="X-UA-Compatible" content="ie=edge">
+            <title>Document</title>
+        </head>
+        <body>
+            <h1>Hello!</h1>
+        ->  {% if request.user.username %}
+            Logged In As : {{request.user.username}}
+            {% endif %}
+            
+            <hr> {% if messages %}
+            <div>
+                {% for message in messages %} {{ message }} {% endfor %}
+            </div>
+        ->  {% endif %}
+            
+            <ul>
+                <li>Login</li>
+                <li>Register</li>
+                <li>Profile</li>
+        --->    <li><a href="{% url 'logout' %}">Logout</a></li>
+            </ul>
+        </body>
+        </html>
+
+##### _accounts.urls.py_
+
+        from accounts.views import index, logout
+        
+        urlpatterns = [
+            path('', index, name='index'),
+            path('logout/', logout, name='logout')
+        ]
+        
