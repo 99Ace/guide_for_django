@@ -27,13 +27,25 @@
                     <li class='list-group-item'><a href="#">Profile</a></li>
                     <li class='list-group-item'><a href="{% url 'logout' %}">Logout</a></li>
                     {% else %}
-                    <li class='list-group-item'><a href="{% url 'login' %}">Login</a></li>
+                    <li class='list-group-item'><a href="#">Login</a></li>
                     <li class='list-group-item'><a href="#">Register</a></li>
                     {% endif %}
                 </ul>
 
             </div>
-            <div class='col-md-4 col-1'></div>
+            <div class='col-md-4 col-1'>
+                <h3> Insert your key to your garage! </h3><hr/>
+                <div class='row'>
+                    <div class='col-4'></div>
+                    <div class='col-8'>
+                        <form method='POST' class='w-100'>
+                            {% csrf_token %}
+                            {{ form.as_p }}
+                            <input type="submit">
+                        </form> 
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 {% endblock %}

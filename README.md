@@ -83,9 +83,7 @@
         # Register your models here.
         admin.site.register(MyUser)
 
-
 ---
-
 ###  SETTING UP THE PROJECT DEPENDENCIES
 
 #### SETUP FOR TEMPLATES INHERITANCE
@@ -179,7 +177,6 @@ Also inside settings.py, include the 'django\_forms\_bootstrap'
         'AppName'
     ]
     
-
 #### SETUP MESSAGE STORAGE
 
 Add this at the bottom of settings.py:\
@@ -188,7 +185,6 @@ Purely to fix an issue with Cloud9
         MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
 
 ---
-
 #### CREATE MIGRATION AND RUN
 1. In the bash terminal, type:
 
@@ -205,6 +201,7 @@ Purely to fix an issue with Cloud9
          
 ---
 
+---
 ## USER AUTHENTICATION SETUP INSTRUCTIONS
 
 ###  ADD A LOGOUT ROUTE
@@ -240,7 +237,8 @@ Now we update the index.html template to show the messages, and to show the logo
             Logged In As : {{request.user.username}}
             {% endif %}
             
-            <hr> {% if messages %}
+            <hr> 
+            {% if messages %}
             <div>
                 {% for message in messages %} {{ message }} {% endfor %}
             </div>
@@ -263,4 +261,101 @@ Now we update the index.html template to show the messages, and to show the logo
             path('', index, name='index'),
             path('logout/', logout, name='logout')
         ]
+
+---
+### CREATE LOGIN PAGE AND FORM FOR ENTRY
+
+#### SETUP THE LOGIN PAGE
+Setup the view, template and url for the login page;
+
+##### _accounts/view.py_
+
+        def login(request):
+            """Returns the login page"""
+            return render(request, 'login.html')
         
+##### _accounts/templates/login.html_
+
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <meta http-equiv="X-UA-Compatible" content="ie=edge">
+            <title>Document</title>
+        </head>
+        <body>
+            <h1>User Login</h1>
+           
+        </body>
+        </html>
+
+##### _accounts folder/urls.py_
+
+        from accounts.views import index, logout, login
+
+        urlpatterns = [
+            path('', index, name='index'),
+            path('logout/', logout, name='logout'),
+            path('login/', login, name='login')
+        ]
+
+##### _accounts/template/index.html_
+Update accounts/template/index.html to enable the link to the login page:
+
+        <body>
+        …   
+            <ul>
+        --->    <li><a href="{% url 'login' %}">Login</a></li>
+                <li>Register</li>
+                <li>Profile</li>
+                <li><a href="{% url 'logout' %}">Logout</a></li>
+                
+            </ul>
+        </body>
+        </html>
+
+#### CREATE THE LOGIN FORM
+Create a forms.py inside the accounts folder, and put down its content:
+
+        from django import forms
+        
+        class UserLoginForm(forms.Form):
+            """Form to login user"""
+            username = forms.CharField()
+            password = forms.CharField(widget=forms.PasswordInput)
+
+#### PUT THE FORM INTO THE PAGE
+Inside accounts/views.py, import the form which we have just created and assign it to a placeholder in the template:
+        
+        from accounts.forms import UserLoginForm
+        
+        def login(request):
+            """Returns the login page"""
+            login_form = UserLoginForm()
+            return render(request, 'login.html', {
+                'form':login_form         
+            })
+
+After which, inside login.html, render the form. Remember the CSRF token!
+
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <meta http-equiv="X-UA-Compatible" content="ie=edge">
+            <title>Document</title>
+        </head>
+        <body>
+            <h1>User Login</h1>
+           
+        --> <form method='POST'>
+                 {% csrf_token %}
+                 {{ form.as_p }}
+                 <input type="submit">
+        --> </form>
+        </body>
+        </html>
+
+
