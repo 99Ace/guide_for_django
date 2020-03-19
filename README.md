@@ -358,4 +358,73 @@ After which, inside login.html, render the form. Remember the CSRF token!
         </body>
         </html>
 
+#### Handle the Login
+Add in the following code to the login function at accounts/views.py
 
+    def login(request):
+        """Returns the login page"""
+        if request.method == 'POST':
+            login_form = UserLoginForm(request.POST) # populate the form from what the user has keyed in
+            if login_form.is_valid():
+                # attempt to check the username and password is valid
+                user = auth.authenticate(username=request.POST['username'],
+                                         password=request.POST['password'])
+                messages.success(request, "You have successfully logged in")
+                if user:
+                    # log in the user
+                    auth.login(user=user, request=request)
+                    return redirect(reverse('index'))
+                else:
+                    login_form.add_error(None, "Invalid username or password")
+                    return render(request, 'login.html', {
+                      'form':login_form
+                    })
+        else:
+            login_form = UserLoginForm()
+            return render(request, 'login.html', {
+                'form':login_form
+            })
+
+Also add display of session messages inside login.html
+
+    <body>
+        <h1>User Login</h1>
+       
+        <form method='POST'>
+             {% csrf_token %}
+             {{ form.as_p }}
+             <input type="submit">
+        </form>
+        
+          <hr> {% if messages %}
+        <div>
+            {% for message in messages %} {{ message }} {% endfor %}
+        </div>
+        {% endif %}
+    </body>
+
+### SETTING UP FOR USER LOGIN
+
+Add to settings.py the default login URL
+    
+    LOGIN_URL = 'login'
+
+#### @login\_required and user.is\_authenticated
+
+###### PREVENT LOGIN PAGE WHEN USER IS LOGGED IN
+Go to accounts.view.py, add in the following line in the **login** function
+
+    def login(request):
+        """Return a login page"""
+        if request.user.is_authenticated:     <----
+            return redirect(reverse('index')) <----
+            ....
+  
+###### REDIRECT BACK TO INDEX WHEN USER IS LOGGED OUT
+Add @login_required infront of the logout function
+
+    @login_required  <---
+    def logout(request):
+        auth.logout(request)
+        messages.success(request, "You have successfully been logged out")
+        return redirect(reverse('index'))

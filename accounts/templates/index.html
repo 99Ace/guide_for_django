@@ -3,37 +3,5 @@
 {% block page_title %}No. 1 Car Trading Platform | SG Car Market{% endblock %}
 
 {% block content %}
-    <div id='div-home' class= 'container-fluid text-center p-5 bg-light'>
-        <div class='row'>
-            <h1  class='w-100sda'> Welcome to Acellent Garage</h1>
-        </div>
-        <hr/>
-        <div class='row'>
-            <div class='col-md-4 col-1'>
-                {% if request.user.username %}
-                    Welcome back to the garage {{request.user.username}}
-                {% endif %}
-                    
-                <hr> 
-                {% if messages %}
-                <div>
-                    {% for message in messages %} {{ message }} {% endfor %}
-                </div>
-                {% endif %}
-            </div>
-            <div class='col-md-4 col-10'>
-                <ul class='list-group w-100'>
-                    {% if user.is_authenticated %}
-                    <li class='list-group-item'><a href="#">Profile</a></li>
-                    <li class='list-group-item'><a href="{% url 'logout' %}">Logout</a></li>
-                    {% else %}
-                    <li class='list-group-item'><a href="{% url 'login' %}">Login</a></li>
-                    <li class='list-group-item'><a href="#">Register</a></li>
-                    {% endif %}
-                </ul>
-
-            </div>
-            <div class='col-md-4 col-1'></div>
-        </div>
-    </div>
+    
 {% endblock %}

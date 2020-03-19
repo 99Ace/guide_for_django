@@ -14,8 +14,35 @@ def logout(request):
     return redirect(reverse('index'))
     
 def login(request):
-    """Returns the login page"""
-    login_form = UserLoginForm()
-    return render(request, 'login.html', {
-        'form':login_form         
-    })
+    """Return a login page"""
+    if request.user.is_authenticated:
+        return redirect(reverse('index'))
+    if request.method == 'POST':
+        
+        login_form = UserLoginForm(request.POST) # populate the form from what the user has keyed in
+        if login_form.is_valid():
+            # attempt to check the username and password is valid
+            user = auth.authenticate(username=request.POST['username'],
+                                     password=request.POST['password'])
+            messages.success(request, "You have successfully logged in")
+            if user:
+                # log in the user
+                auth.login(user=user, request=request)
+                return redirect(reverse('index'))
+            else:
+                login_form.add_error(None, "Invalid username or password")
+                return render(request, 'login.html', {
+                  'form':login_form,
+                  'error_message': 'Invalid username or password',
+                })
+
+    else:
+        error_message = ''
+        login_form = UserLoginForm()
+        return render(request, 'login.html', {
+            'form':login_form,
+            'error_message': ''
+        })
+
+def registration(request):
+    return render (request, 'registration.html')

@@ -3,7 +3,7 @@
 {% block page_title %}No. 1 Car Trading Platform | SG Car Market{% endblock %}
 
 {% block content %}
-    <h3> Insert your key to your garage! </h3><hr/>
+    <h3> Register a key to your garage! </h3><hr/>
     <div class='w-100'>
         <form method='POST' class='w-100'>
             {% csrf_token %}
@@ -22,7 +22,7 @@
             </table>
             <hr/>
             <input type="submit" class='text-center'>
+            <p><small class='font-italic'>If you already have an account, you can <a href="{% url 'login' %}">sign in.</a></small></p>
         </form> 
     </div>
-
 {% endblock %}
