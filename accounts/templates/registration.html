@@ -4,24 +4,15 @@
 
 {% block content %}
     <h3> Register a key to your garage! </h3><hr/>
-    <div class='w-100'>
+    <div class='w-100 text-left'>
         <form method='POST' class='w-100'>
             {% csrf_token %}
-            <table class='w-100'>
-                <tr>
-                    <th colspan='2' class='font-italic text-danger'><small>{{error_message}}</small></td>
-                </tr>
-                <tr>
-                    <th><label><strong>Username : </strong></label></th>
-                    <td>{{ form.username }}</td>
-                </tr>
-                <tr>
-                    <th><label><strong>Password :  </strong></label></th>
-                    <td>{{ form.password }}</td>
-                </tr>
-            </table>
-            <hr/>
-            <input type="submit" class='text-center'>
+            {{ form.as_p }}
+            <input type="submit" class='text-center btn btn-dark' value='Register'>
+
+            <hr>
+            
+          
             <p><small class='font-italic'>If you already have an account, you can <a href="{% url 'login' %}">sign in.</a></small></p>
         </form> 
     </div>

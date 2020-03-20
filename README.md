@@ -428,3 +428,194 @@ Add @login_required infront of the logout function
         auth.logout(request)
         messages.success(request, "You have successfully been logged out")
         return redirect(reverse('index'))
+
+### SETUP REGISTRATION FORM
+We are now going to create a page to show a registration form. As usual, we need a function inside views.py, a tpath in urls.py and then a template.
+
+#### CREATE REGISTRATION FUNCTION
+###### Inside account/views.py:
+
+    def register(request):
+       return render(request, 'register.html')
+
+###### Inside <project folder>/urls.py
+    
+    from django.contrib import admin
+    from django.urls import path
+    from accounts.views import index, logout, login, profile, register
+
+    urlpatterns = [
+        path('admin/', admin.site.urls),
+        path('', index, name='index'),
+        path('logout/', logout, name='logout'),
+        path('login/', login, name='login'),
+        path('profile/', profile),
+        path('register/', register, name='register')]
+
+###### account/templates/register.html
+
+    {% extends 'base.html' %}
+    {% block page_title %}Registration Page{% endblock %}
+    {% block page_heading %}User Registration{% endblock %}
+    {% block content %}
+    <p>If you already have an account, you can <a href="{% url 'login' %}">sign in </a></p>
+    {% endblock %}
+
+#### ADD THE REGISTRATION FORM
+###### account/forms.py
+Add in the form below, make the following changes. The ones highlighted in green are for our custom user model to work.
+
+    #Remember to import the below
+    from django.contrib.auth.models import User
+    from django.contrib.auth.forms import UserCreationForm
+    from django.core.exceptions import ValidationError
+    from .models import MyUser
+
+    class UserRegistrationForm(UserCreationForm):
+        """Form used to register a new user"""
+    
+        password1 = forms.CharField(widget=forms.PasswordInput)
+        password2 = forms.CharField(
+            label="Password Confirmation",
+            widget=forms.PasswordInput)
+        
+        class Meta:
+            model = User MyUser
+        fields = ['email', 'username', 'password1', 'password2']
+
+###### Create the form inside the view function register:
+Remember to import in the **UserRegistrationForm** (see #1)
+
+    from .forms import UserLoginForm, UserRegistrationForm  #1
+    def register(request):
+        form = UserRegistrationForm()
+        return render(request, 'register.html', {
+            'form':form
+        })
+
+###### _accounts/templates/register.html_
+
+    {% extends 'base.html' %}
+    {% block page_title %}Registration Page{% endblock %}
+    {% block page_heading %}User Registration{% endblock %}
+    {% block content %}
+    <p>If you already have an account, you can <a href="{% url 'login' %}">sign in </a></p>
+    <form method='POST'>
+        {% csrf_token %}
+        {{ form.as_p }}
+        <input type='submit'/>
+    </form>
+    {% endblock %}
+
+#### Add in validation
+We will add in rules to the form to make sure that the user enters valid information for the field. While we are able to check the length of the data and all that just with the various model fields, we have to write additional logic to check for length of password, if both passwords are key in properly and so on.
+
+###### _accounts.forms.py_
+Inside the class UserRegistrationForm (in forms.py), add this class after Meta (do not indent under Meta!)
+Make sure you have this import at the top
+
+    from django.contrib.auth import get_user_model
+    
+    #Add the following to the registration form
+    def clean_email(self):
+        User = get_user_model()
+        email = self.cleaned_data.get('email') **#1**
+        username = self.cleaned_data.get('username')
+        **#2** check if the email is unique, using the Django ORM
+        if User.objects.filter(email=email):
+            raise forms.ValidationError(u'Email address must be unique')
+        return email
+
+At **#1**, we get a cleaned version of the email. By cleaned, we mean that all special characters inside the field has been processed so it won't cause issues when added into the database (like say, SQL injection).
+For **#2**, we use Django ORM to check if the email is already in use. 
+
+We will next add in the validation for the password:
+
+    def clean_password2(self):
+        password1 = self.cleaned_data.get('password1')
+        password2 = self.cleaned_data.get('password2')
+
+        if not password1 or not password2:
+            raise ValidationError("Please confirm your password")
+        
+        if password1 != password2:
+            raise ValidationError("Passwords must match")
+        
+        return password2
+
+#### Process the Form PART A -- validation 
+The usual structure for a view function that process a form is:
+
+
+###### _accounts/views.py_
+Warning -- this is an example boilerplate for a function that process form. This is not working code!
+    def your_generic_view_function_with_form(request):
+        # if a form is submitted
+        if request.method == 'POST':
+            form = MyForm(request.POST)
+            if form.is_valid():
+                # do processing
+                # after finished processing
+                return redirect('path_to_redirect_to')
+        else:
+            # just show the form
+            form = MyForm()
+            return render(request, 'whatever_template_you_want.html',{
+                'form': form
+            })
+
+So for our case, we will change the register() view function in accounts/views.py to:
+
+    def register(request):
+        if request.method == 'POST':
+            form = UserRegistrationForm(request.POST)
+            if form.is_valid(): #1 check if the entry to the form are valid
+                pass
+            else:
+                #2 if not valid, return the form to the view to show the errors
+                return render(request, 'register.html', {
+                    'form':form
+                })
+        else:
+            form = UserRegistrationForm()
+            return render(request, 'register.html', {
+                'form':form
+            })
+
+At **#1**, we will use the is_valid() function to check if the data the user has submitted fits our validation rules (defined in step 3 above). Then for #2, if there are invalid entries, we will just re-render the form. The validation errors will show automatically.
+
+#### 4B - Process the Form PART B -- add in the user if all fields are proper
+If the form passed all the tests (i.e, form.is_valid() returns true), then we can proceed to add in the new user. Make the following adjustments to register()
+
+    def register(request):
+        User = get_user_model()
+        if request.method == 'POST':
+            form = UserRegistrationForm(request.POST)
+            # NEW CODE STARTS HERE
+            if form.is_valid():
+                
+                #1 create the user
+                form.save()
+    
+                #2 check if the user has been created properly
+                user = auth.authenticate(username=request.POST['username'],
+                                         password=request.POST['password1'])
+                if user:
+                    #3 if the user has been created successful, attempt to login
+                    auth.login(user=user, request=request)
+                    messages.success(request, "You have successfully registered")
+                else:
+                    messages.error(request, "Unable to register your account at this time")
+                return redirect(reverse('index'))
+            #NEW CODE ENDS HERE
+            else:
+                return render(request, 'register.html', {
+                    'form':form
+                })
+        else:
+            form = UserRegistrationForm()
+            return render(request, 'register.html', {
+                'form':form
+            })
+
+With this, you will be able to register a user.
