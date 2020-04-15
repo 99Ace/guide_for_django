@@ -46,7 +46,7 @@
     
         # Create your models here.
         class MyUser(AbstractUser):
-        pass
+            pass
 
     Note: if you want to have fields in your custom MyUser, just add to it normally as if it is any other model.
 
@@ -88,7 +88,7 @@
 
 #### SETUP FOR TEMPLATES INHERITANCE
 
-Create a new folder name 'templates' in the same level as the project folder and then modify settings.py:
+- Step 1: Create a new folder name 'templates' in the same level as the project folder and then modify settings.py:
 
         TEMPLATES = [
             {
@@ -106,6 +106,44 @@ Create a new folder name 'templates' in the same level as the project folder and
                 },
             },
         ]
+
+- Step 2: add base.html in _<main project folder\>/templates_
+
+        <!doctype html>
+        <html lang="en">
+        <head>
+            <!-- Required meta tags -->
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        
+            <!-- Bootstrap CSS -->
+            <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+            <!--Custom CSS-->
+            <!--FontAwesome-->
+            <script src="https://kit.fontawesome.com/af4d281973.js"></script>
+            <title>{% block page_title %} {% endblock %}</title>
+        </head>
+        
+        <body>
+            {% block content %}{% endblock %}
+            <!-- Optional JavaScript -->
+            <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+            <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+            <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+            <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+        </body>
+        </html>
+ 
+- Step 3: add in _accounts/template/index.html_
+
+        {% extends 'base.html' %}
+        
+        {% block page_title %}No. 1 Car Trading Platform | SG Car Market{% endblock %}
+        
+        {% block content %}
+            
+        {% endblock %}
+
 
 #### SETUP STATIC FOLDER
 To use static files (JavaScript, CSS etc), we must first instruct Django where to locate the static files. 
@@ -138,8 +176,8 @@ The first thing we will do is to move all the accounts paths from <project folde
 
 Create  a new file as accounts/urls.py and enter the following:
         
-        from django.urls import path, include.
-        from .views import index, logout, login, profile, register
+        from django.urls import path, include
+        from .views import index
         
         urlpatterns = [
             path('', index, name='index'),
@@ -619,3 +657,22 @@ If the form passed all the tests (i.e, form.is_valid() returns true), then we ca
             })
 
 With this, you will be able to register a user.
+
+### SETUP FOR RESET PASSWORD
+###### Inside _accounts folder_
+
+    create a file name = url_reset.py
+    
+Add in the following:
+
+    from django.conf.urls import url
+    from django.core.urlresolvers import reverse_lazy
+    from django.contrib.auth.views import password_reset, password_reset_done, password_reset_confirm, password_reset_complete
+    
+    urlpatterns = [
+        url('^$', password_reset, {'post_reset_redirect': reverse_lazy('password_reset_done')}, name='password_reset'),
+        url(r'^done/$', password_reset_done, name='password_reset_done'),
+        url(r'^(?P<uidb64>[0-9A-Za-z]+)-(?P<token>.+)/$', password_reset_confirm,
+            {'post_reset_redirect': reverse_lazy('password_reset_complete')}, name='password_reset_confirm'),
+        url('^complete/$', password_reset_complete, name='password_reset_complete')
+    ]
